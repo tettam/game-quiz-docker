@@ -1,0 +1,56 @@
+version: '3.8'
+
+name: game_quiz
+
+services:
+  postgres:
+    image: postgres:alpine3.20
+    container_name: postgress
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: 12345
+      POSTGRES_DB: game_quiz
+    ports:
+      - "5432:5432"
+    volumes:
+      - game_quiz_data:/var/lib/quiz/data
+    networks:
+      - game_quiz_network
+  
+  adminer:
+    image: adminer
+    container_name: adminer
+    environment:
+      ADMINER_DESIGN: nette
+      ADMINER_DEFAULT_SERVER: postgres:5432
+      ADMINER_DEFAULT_USERNAME: root
+      ADMINER_DEFAULT_PASSWORD: 12345
+    ports:
+      - "8080:8080"
+    networks:
+      - game_quiz_network
+    depends_on:
+      - postgres
+    volumes:
+      - game_quiz_data:/var/lib/quiz/data
+
+  apache:
+    build: .
+    image: php:8.1-apache
+    container_name: apache
+    ports:
+      - "80:80"
+    volumes:
+      - /home/develop/projects/jogo-biblico/backend:/var/www/html
+    networks:
+      - game_quiz_network
+    depends_on:
+      - postgres
+  
+
+networks:
+  game_quiz_network:
+    driver: bridge
+
+volumes:
+  game_quiz_data: {}
